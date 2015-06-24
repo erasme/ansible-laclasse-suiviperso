@@ -1,0 +1,13 @@
+# -*- mode: yaml; -*-
+# Change db credentials below
+laclasse_suiviperso_database:
+  name: suiviperso
+  user: suivi
+  host: 'localhost'
+  password: "foobar"
+
+laclasse_suiviperso_deploy_user: "{{ci_user}}"
+
+laclasse_redis_server: localhost
+laclasse_redis_root: "vagrant:suiviperso"
+

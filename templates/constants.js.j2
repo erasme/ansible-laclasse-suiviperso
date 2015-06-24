@@ -1,0 +1,10 @@
+'use strict';
+
+// Note: pour des raisons pratiques certaines constantes sémantiquement parlant sont en fait des factory ou des services
+
+angular.module('suiviApp')
+.constant('LACLASSE_PATH', '{{ laclasse_main_domain }}')
+.constant('APP_PATH', '{{ laclasse_services.suiviperso.path }}')
+.constant('UPLOAD_SIZE', {{ laclasse_services_client_max_body_size }});
+
+      

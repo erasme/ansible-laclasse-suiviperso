@@ -1,0 +1,6 @@
+- name: Restart laclasse-suiviperso
+  service: name=laclasse-suiviperso state=restarted
+  notify: Check laclasse-suiviperso
+
+- name: Check laclasse-suiviperso
+  wait_for: port={{laclasse_suiviperso_port}} delay=5 timeout=10

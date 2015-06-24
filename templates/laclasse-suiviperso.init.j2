@@ -1,0 +1,57 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          laclasse-suiviperso
+# Required-Start:    $local_fs $remote_fs
+# Required-Stop:     $local_fs $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      S 0 1 6
+# Short-Description: suiviperso  initscript
+# Description:       suiviperso laclasse.com
+### END INIT INFO
+
+# (c) ERASME / laclasse.com
+
+# Do NOT "set -e"
+
+APP=laclasse-suiviperso
+APP_PATH=~{{ laclasse_suiviperso_deploy_user }}/${APP}
+DAEMON="${APP_PATH}/bin/puma"
+CONTROL="${APP_PATH}/bin/pumactl"
+
+SCRIPT_NAME=/etc/init.d/${APP}
+
+ARGS="--daemon -C${APP_PATH}/config/puma.rb ${APP_PATH}/config.ru"
+CONTROL_ARGS="-F${APP_PATH}/config/puma.rb "
+
+PID_DIR="{{laclasse_pid_dir}}/${APP}"
+DEPLOY_USER="{{ laclasse_suiviperso_deploy_user }}"
+
+# Creates PID dir (this dir is in tmps, so it needs to be created at every boot)
+if [ ! -e {{ laclasse_pid_dir }}/${APP} ]; then
+  mkdir -p {{ laclasse_pid_dir }}/${APP}
+  chown {{ laclasse_suiviperso_deploy_user }} {{ laclasse_pid_dir }}/${APP}
+fi
+
+. /lib/init/vars.sh
+
+# Exit if the package is not installed
+[ -x "$DAEMON" ] || exit 0
+[ -x "$CONTROL" ] || exit 0
+
+case "$1" in
+  start)
+  su - {{ laclasse_suiviperso_deploy_user }} -c "$DAEMON $ARGS"
+  ;;
+  stop)
+  su - {{ laclasse_suiviperso_deploy_user }} -c "$CONTROL $CONTROL_ARGS stop"
+  ;;
+  restart)
+  su - {{ laclasse_suiviperso_deploy_user }} -c "$CONTROL $CONTROL_ARGS restart"
+  ;;
+  *)
+  echo "Usage: $SCRIPT_NAME {start|stop|restart}" >&2
+  exit 3
+  ;;
+esac
+
+:

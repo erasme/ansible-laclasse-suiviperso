@@ -1,0 +1,173 @@
+- set_fact: database_delegate_hostname="{{ inventory_hostname }}"
+  when: "'{{ laclasse_suiviperso_database.host }}' == 'localhost'"
+
+- set_fact: database_delegate_hostname="{{ laclasse_suiviperso_database.host }}"
+  when: "'{{ laclasse_suiviperso_database.host }}' != 'localhost'"
+
+- set_fact: database_client_hostname="{{ inventory_hostname }}"
+  when: "'{{ laclasse_suiviperso_database.host }}' != 'localhost'"
+
+- set_fact: database_client_hostname="localhost"
+  when: "'{{ laclasse_suiviperso_database.host }}' == 'localhost'"
+
+- name: Creates deploy user
+  user: >
+    name={{ laclasse_suiviperso_deploy_user }}
+    comment="Service suiviperso user"
+  notify: Restart laclasse-suiviperso
+
+- name: Creates deploy directory
+  file: >
+    path=~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/
+    owner={{ laclasse_suiviperso_deploy_user }}
+    state=directory
+  notify: Restart laclasse-suiviperso
+
+- name: Checkout app
+  sudo_user: "{{ laclasse_suiviperso_deploy_user }}"
+  sudo: true
+  git:
+    repo: "{{ laclasse_suiviperso_repos }}"
+    dest: "~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/"
+    version: "{{ laclasse_suiviperso_version }}"
+    accept_hostkey: true
+    force: true
+  register: new_version
+  notify: Restart laclasse-suiviperso
+
+- name: Gets current tag
+  shell: cd ~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/ && git describe --always --tag
+  changed_when: false
+  register: git_tag
+
+- debug: var=git_tag.stdout
+
+- name: Installs necessary prereqs
+  apt: pkg={{ item }} state=latest
+  with_items: laclasse_suiviperso_packages
+  notify: Restart laclasse-suiviperso
+
+- name: Check if a bundle is required
+  sudo_user: "{{ laclasse_suiviperso_deploy_user }}"
+  sudo: true
+  shell: cd ~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/; bash -lc 'bundle check --no-color --path ~/bundler_shared/ || true'
+  changed_when: bundle_required.stdout != "The Gemfile's dependencies are satisfied"
+  register: bundle_required
+
+- name: Bundles pack application
+  sudo_user: "{{ laclasse_suiviperso_deploy_user }}"
+  sudo: true
+  shell: cd ~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/; bash -lc 'bundle pack --no-color --all --path  ~/bundler_shared/'
+  when: bundle_required|changed
+
+- name: Bundles application
+  sudo_user: "{{ laclasse_suiviperso_deploy_user }}"
+  sudo: true
+  shell: cd ~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/; bash -lc 'bundle --no-color --deployment --path  ~/bundler_shared/'
+  when: bundle_required|changed
+  notify: Restart laclasse-suiviperso
+
+- name: Adds application config
+  sudo_user: "{{ laclasse_suiviperso_deploy_user }}"
+  sudo: true
+  register: new_config
+  template: >
+    src="../templates/{{ item }}.j2"
+    dest="~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/config/{{ item }}"
+  with_items:
+    - options.rb
+    - common.rb
+    - puma.rb
+    - database.rb
+    - rights_constants.rb
+  notify: Restart laclasse-suiviperso
+
+- name: Adds client side application config
+  sudo_user: "{{ laclasse_suiviperso_deploy_user }}"
+  sudo: true
+  template:
+    src="../templates/constants.js.j2"
+    dest="~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/public/app/scripts/constants.js"
+
+- name: Adds python-mysqldb
+  apt: pkg=python-mysqldb
+
+- name: Creates database
+  mysql_db: name={{ laclasse_suiviperso_database.name }} state=present
+  delegate_to: "{{database_delegate_hostname}}"
+  register: db_created
+
+- name: Creates database user
+  mysql_user:
+    user="{{ laclasse_suiviperso_database.user }}"
+    password="{{ laclasse_suiviperso_database.password }}"
+    priv="{{ laclasse_suiviperso_database.name }}.*:ALL"
+    host="{{ database_client_hostname }}"
+  delegate_to: "{{database_delegate_hostname}}"
+  register: dbuser_created
+
+- name: Check if a migration is needed
+  sudo_user: "{{ laclasse_suiviperso_deploy_user }}"
+  sudo: true
+  shell: >
+    cd ~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/; bash -lc 'RACK_ENV={{ laclasse_environment }} bundle exec rake  db:check_migrate'
+  register: db_migrate_required
+  changed_when: db_migrate_required.rc == 1
+  when: new_version|changed  
+  failed_when: false
+
+- name: Migrates Database
+  sudo_user: "{{ laclasse_suiviperso_deploy_user }}"
+  sudo: true
+  shell: cd ~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/; bash -lc 'RACK_ENV={{ laclasse_environment }} bundle exec rake db:migrations'
+  when:  new_version|changed and db_migrate_required.rc == 1
+  notify: Restart laclasse-suiviperso
+
+# - name: Adds client side config
+#   sudo_user: "{{ laclasse_suiviperso_deploy_user }}"
+#   sudo: true
+#   template: src="../templates/constants.js.j2" dest="~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/public/app/scripts/constants.js"
+
+- name: Binstubs puma
+  sudo_user: "{{ laclasse_suiviperso_deploy_user }}"
+  sudo: true
+  shell: cd ~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/; bash -lc "bundle binstubs puma"
+  register: puma_has_been_binstubbed
+  changed_when: '"Skipped puma since it already exists" in puma_has_been_binstubbed'
+  notify: Restart laclasse-suiviperso
+
+- name: Deploys init script
+  template: src="../templates/laclasse-suiviperso.init.j2" dest=/etc/init.d/laclasse-suiviperso mode=0770
+  notify: Restart laclasse-suiviperso
+
+- name: Creates PID and log dirs
+  file: >
+    dest={{ item }}/laclasse-suiviperso/
+    owner={{ laclasse_suiviperso_deploy_user }}
+    group={{ laclasse_suiviperso_deploy_user }}
+    mode=750
+    state=directory
+  with_items:
+    - "{{ laclasse_log_parent_dir }}"
+  notify: Restart laclasse-suiviperso
+
+- name: Registers init script
+  shell: update-rc.d laclasse-suiviperso defaults
+  when: new_version|changed
+  notify: Restart laclasse-suiviperso
+
+- name: Check if firewall is opened
+  shell: iptables-save
+  register: needs_iptables
+  changed_when: needs_iptables.stdout.find("laclasse-suiviperso") == -1 and laclasse_environment == 'production'
+
+- name: Open firewall
+  shell: iptables -A TCP_IN -p tcp -m tcp --dport {{ laclasse_suiviperso_port}} -j ACCEPT -m comment --comment laclasse-suiviperso
+  ignore_errors: true
+  register: new_iptables_rule
+  when: needs_iptables | changed
+
+- name: Saves firewall
+  shell: iptables-save > {{ firewall.rules_file }}
+  when: needs_iptables | changed and new_iptables_rule | success
+

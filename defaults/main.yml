@@ -1,0 +1,74 @@
+# Generic parameters
+laclasse_environment: 'development'
+laclasse_log_parent_dir: /var/log
+laclasse_main_url: 'http://example.org'
+laclasse_main_domain: 'www.example.org'
+laclasse_pid_dir: /var/run/
+laclasse_puma_auth_token: somerandomtoken
+
+## Annuaire
+laclasse_annuaire_main_path: 'api'
+laclasse_annuaire_app_component: 'app'
+laclasse_annuaire_aaf_url: https://www.dev.example.org/annuaire
+
+## Logstash server parameters
+logstash_server: localhost
+logstash_udp_json_port: 1234
+
+# No defaults for this one, you need to define it
+laclasse_redis_server: false
+laclasse_redis_port: 6379
+# No defaults for this one, you need to define it
+laclasse_redis_root: false
+
+## Slack server
+laclasse_slack:
+  host: localhost
+  channel: none
+  token: none
+
+## SSO
+laclasse_sso_disable_ssl_verification: 'false'
+laclasse_sso_login_url: '/login'
+laclasse_sso_logout_url: '/logout'
+laclasse_sso_logout_saml: '/saml/logout'
+laclasse_sso_port: 443
+laclasse_sso_restmod_url: '/restmod'
+laclasse_sso_server: cas.example.org
+laclasse_sso_service_validate_url: '/service_validate'
+laclasse_sso_ssl: 'true'
+
+laclasse_services:
+  annuaire:
+    api_key: ''
+    api_mode: ''
+    app_id: 'ANNUAIRE'
+    title: 'Annuaire'
+    description: 'Annuaire'
+    path: '/annuaire'
+  docs:
+    api_key: 'someapikey'
+    api_mode: 'v3'
+    app_id: 'DOC'
+    description: "Espace personnel de stockage, et espaces partagés."
+    path: '/docs'
+    title: 'Documents'
+  suiviperso:
+    api_key: 'someapikey'  
+    description: 'Suivi Personnalisé des élèves'
+    title: 'SuiviPerso'
+    app_id: 'SUIVIELV'
+    path: '/'
+    api_mode: v3
+
+laclasse_suivi_perso_nginx_location_specific:
+  client_max_body_size: 20000000
+
+laclasse_services_client_max_body_size: 40000000
+laclasse_suiviperso_deploy_user: 'suivi'
+laclasse_suiviperso_port: 42650
+laclasse_suiviperso_packages:
+  - libmysqlclient-dev
+laclasse_suiviperso_repos: 'https://github.com/laclasse-com/service-suivi-perso.git'
+laclasse_suiviperso_ruby_version: 2.2.2
+laclasse_suiviperso_version: 'master'

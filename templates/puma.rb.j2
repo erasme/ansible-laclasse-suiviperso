@@ -1,0 +1,11 @@
+threads 1,8
+workers 3
+daemonize
+bind 'tcp://0.0.0.0:{{ laclasse_suiviperso_port }}'
+environment '{{ laclasse_environment }}'
+directory '/home/{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/'
+pidfile '{{ laclasse_pid_dir }}/laclasse-suiviperso/puma.pid'
+state_path '{{ laclasse_pid_dir }}/laclasse-suiviperso/puma.state'
+activate_control_app 'tcp://0.0.0.0:{{ laclasse_suiviperso_port + 1 }}', { auth_token: '{{ laclasse_puma_auth_token }}' }
+stdout_redirect '{{ laclasse_log_parent_dir }}/laclasse-suiviperso/puma.log', '{{ laclasse_log_parent_dir }}/laclasse-suiviperso/puma_error.log', true
+tag 'puma-laclasse-suiviperso'

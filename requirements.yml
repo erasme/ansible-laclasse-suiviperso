@@ -1,0 +1,4 @@
+- src: erasme.rbenv
+  name: ansible-rbenv
+- src: erasme.ruby-compiled
+  name: ansible-ruby-compiled

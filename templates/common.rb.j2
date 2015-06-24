@@ -1,0 +1,48 @@
+# -*- coding: utf-8 -*-
+
+{% import 'macros/url.j2' as url with context %}
+
+#
+# Configuration du Serveur d'Authentification Central CAS
+#
+module CASAUTH
+  CONFIG = {
+    host: "{{ laclasse_sso_server }}",
+    ssl: {{ laclasse_sso_ssl }},
+    port: {{ laclasse_sso_port }},
+    disable_ssl_verification: {{ laclasse_sso_disable_ssl_verification }},
+    login_url: "{{ laclasse_sso_login_url }}",
+    service_validate_url: "{{ laclasse_sso_service_validate_url }}",
+    logout_url: "{{ laclasse_sso_logout_url }}",
+    logout_saml_url: "{{ laclasse_sso_logout_saml }}",
+    full_host: "{{ laclasse_main_domain }}", # Fixes OmniAuthCAS+Rack X-Forwarded-Proto crap
+    restmod_url: '{{ laclasse_sso_restmod_url }}',    
+  }
+end
+
+#
+# Configuration du service d'annuaire de l'ENT
+#
+ANNUAIRE = {
+  url:      '{{ url.trim_trailing_slashes(url.dedup_slashes(laclasse_main_url, "/", laclasse_services.annuaire.path)) }}' ,
+  api_key:  "{{ laclasse_services.annuaire.api_key }}",
+  app_id:   '{{ laclasse_services.annuaire.app_id }}',
+  api_mode: '{{ laclasse_services.annuaire.api_mode }}'
+}
+
+module Configuration
+  APP_PREFIX = '{{ laclasse_services.suiviperso.path }}'
+  GIT_COMMIT = '{{ git_tag.stdout }}'
+  ENVIRONMENT = '{{ laclasse_environment }}'
+  LOGSTASH_SERVER="{{ logstash_server }}"
+  LOGSTASH_PORT="{{ logstash_udp_json_port }}"
+end
+
+#
+# Configuration du service REDIS
+#
+REDIS = {
+  host: '{{ laclasse_redis_server }}',
+  port: {{ laclasse_redis_port }},
+  redis_root: '{{ laclasse_redis_root }}'
+}
