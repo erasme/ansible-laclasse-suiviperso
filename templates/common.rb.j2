@@ -9,13 +9,13 @@ module CASAUTH
   CONFIG = {
     host: "{{ laclasse_sso_server }}",
     ssl: {{ laclasse_sso_ssl }},
-    port: {{ laclasse_sso_port }},
+    port: {{ laclasse_sso_port_external }},
     disable_ssl_verification: {{ laclasse_sso_disable_ssl_verification }},
     login_url: "{{ laclasse_sso_login_url }}",
     service_validate_url: "{{ laclasse_sso_service_validate_url }}",
     logout_url: "{{ laclasse_sso_logout_url }}",
     logout_saml_url: "{{ laclasse_sso_logout_saml }}",
-    full_host: "{{ laclasse_main_domain }}", # Fixes OmniAuthCAS+Rack X-Forwarded-Proto crap
+    full_host: "{{ url.trim_trailing_slashes(laclasse_main_url) }}", # Fixes OmniAuthCAS+Rack X-Forwarded-Proto crap
     restmod_url: '{{ laclasse_sso_restmod_url }}',    
   }
 end

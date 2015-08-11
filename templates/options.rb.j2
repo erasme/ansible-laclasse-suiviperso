@@ -18,6 +18,9 @@ APP_ROOT = File.expand_path(File.join(File.dirname(__FILE__), '..'))
 # Mapping HAProxy de l'application, ex : '/v3/docs'
 APP_PATH = '{{ laclasse_services.suiviperso.path | regex_replace('\/+$', '') }}'
 
+# App version
+APP_VERSION = '{{ laclasse_suiviperso_version }}'
+
 # Langage par défaut de l'application
 LANG = 'fr'
 

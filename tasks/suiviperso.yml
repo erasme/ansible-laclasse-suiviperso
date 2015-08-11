@@ -13,7 +13,7 @@
 - name: Creates deploy user
   user: >
     name={{ laclasse_suiviperso_deploy_user }}
-    comment="Service suiviperso user"
+    comment="laclasse user"
   notify: Restart laclasse-suiviperso
 
 - name: Creates deploy directory
