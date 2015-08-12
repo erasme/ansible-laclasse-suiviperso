@@ -113,7 +113,7 @@
     cd ~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/; bash -lc 'RACK_ENV={{ laclasse_environment }} bundle exec rake  db:check_migrate'
   register: db_migrate_required
   changed_when: db_migrate_required.rc == 1
-  when: new_version|changed  
+  when: new_version|changed
   failed_when: false
 
 - name: Migrates Database
@@ -159,7 +159,8 @@
 - name: Check if firewall is opened
   shell: iptables-save
   register: needs_iptables
-  changed_when: needs_iptables.stdout.find("laclasse-suiviperso") == -1 and laclasse_environment == 'production'
+  changed_when: needs_iptables.stdout.find("laclasse-suiviperso") == -1
+  when: laclasse_environment == 'production' and firewall is defined
 
 - name: Open firewall
   shell: iptables -A TCP_IN -p tcp -m tcp --dport {{ laclasse_suiviperso_port}} -j ACCEPT -m comment --comment laclasse-suiviperso
