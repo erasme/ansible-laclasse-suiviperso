@@ -46,7 +46,8 @@ DOCS = {
 # Configuration du service d'annuaire de l'ENT
 #
 ANNUAIRE = {
-  api_key:    "{{ laclasse_services.suiviperso.api_key }}",
-  app_id:     '{{ laclasse_services.suiviperso.app_id }}',
-  api_mode:   '{{ laclasse_services.suiviperso.api_mode }}'
+  url:      '{{ url.trim_trailing_slashes(url.dedup_slashes(laclasse_main_url, "/", laclasse_annuaire_main_path))  }}' ,
+  api_key:  "{{ laclasse_services.suiviperso.api_key }}",
+  app_id:   '{{ laclasse_services.suiviperso.app_id }}',
+  api_mode: '{{ laclasse_services.suiviperso.api_mode }}'
 }
