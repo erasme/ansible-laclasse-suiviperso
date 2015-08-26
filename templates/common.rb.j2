@@ -16,19 +16,10 @@ module CASAUTH
     logout_url: "{{ laclasse_sso_logout_url }}",
     logout_saml_url: "{{ laclasse_sso_logout_saml }}",
     full_host: "{{ url.trim_trailing_slashes(laclasse_main_url) }}", # Fixes OmniAuthCAS+Rack X-Forwarded-Proto crap
-    restmod_url: '{{ laclasse_sso_restmod_url }}',    
+    restmod_url: '{{ laclasse_sso_restmod_url }}',
   }
 end
 
-#
-# Configuration du service d'annuaire de l'ENT
-#
-ANNUAIRE = {
-  url:      '{{ url.trim_trailing_slashes(url.dedup_slashes(laclasse_main_url, "/", laclasse_services.annuaire.path)) }}' ,
-  api_key:  "{{ laclasse_services.annuaire.api_key }}",
-  app_id:   '{{ laclasse_services.annuaire.app_id }}',
-  api_mode: '{{ laclasse_services.annuaire.api_mode }}'
-}
 
 module Configuration
   APP_PREFIX = '{{ laclasse_services.suiviperso.path }}'
