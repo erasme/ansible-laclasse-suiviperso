@@ -70,5 +70,5 @@ laclasse_suiviperso_port: 42650
 laclasse_suiviperso_packages:
   - libmysqlclient-dev
 laclasse_suiviperso_repos: 'https://github.com/laclasse-com/service-suivi-perso.git'
-laclasse_suiviperso_ruby_version: 2.2.2
+laclasse_suiviperso_ruby_version: "{{ laclasse_ruby_version | default('2.2.2')  }}"
 laclasse_suiviperso_version: 'master'
