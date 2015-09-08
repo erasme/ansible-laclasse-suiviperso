@@ -38,6 +38,7 @@
 - name: Gets current tag
   shell: cd ~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/ && git describe --always --tag
   changed_when: false
+  always_run: yes
   register: git_tag
 
 - debug: var=git_tag.stdout
@@ -113,14 +114,14 @@
     cd ~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/; bash -lc 'RACK_ENV={{ laclasse_environment }} bundle exec rake  db:check_migrate'
   register: db_migrate_required
   changed_when: db_migrate_required.rc == 1
-  when: new_version|changed
+  when: new_version is defined and new_version|changed
   failed_when: false
 
 - name: Migrates Database
   sudo_user: "{{ laclasse_suiviperso_deploy_user }}"
   sudo: true
   shell: cd ~{{ laclasse_suiviperso_deploy_user }}/laclasse-suiviperso/; bash -lc 'RACK_ENV={{ laclasse_environment }} bundle exec rake db:migrations'
-  when:  new_version|changed and db_migrate_required.rc == 1
+  when:  new_version is defined and new_version|changed and db_migrate_required.rc == 1
   notify: Restart laclasse-suiviperso
 
 # - name: Adds client side config
@@ -153,7 +154,7 @@
 
 - name: Registers init script
   shell: update-rc.d laclasse-suiviperso defaults
-  when: new_version|changed
+#  when: new_version is defined and new_version|changed
   notify: Restart laclasse-suiviperso
 
 - name: Check if firewall is opened
