@@ -96,6 +96,7 @@
 - name: Creates database
   mysql_db: name={{ laclasse_suiviperso_database.name }} state=present
   delegate_to: "{{database_delegate_hostname}}"
+  when: not laclasse_skip_database
   register: db_created
 
 - name: Creates database user
@@ -105,6 +106,7 @@
     priv="{{ laclasse_suiviperso_database.name }}.*:ALL"
     host="{{ database_client_hostname }}"
   delegate_to: "{{database_delegate_hostname}}"
+  when: not laclasse_skip_database
   register: dbuser_created
 
 - name: Check if a migration is needed
